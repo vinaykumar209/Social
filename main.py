@@ -8,15 +8,15 @@ import utills, plot
 
 confid = 0.5
 thresh = 0.5
-mouse_pts = [(4,7),(630,8),(634,475),(3,477),(84,49),(205,54),(87,152),(177,146)]
+mouse_pts = [(0,0),(640,0),(640,480),(0,480),(0,0),(384,0),(0,288),(177,146)]
 
 
 
-def calculate_social_distancing(vid_path, net, output_dir, ln1):
+def calculate_social_distancing(vid_path, net, ln1):
     
     count = 0
-    vs = cv2.VideoCapture(0)    
-
+    #vs = cv2.VideoCapture(0)    
+    vs = cv2.VideoCapture("./data/test.mp4")
    
     height = int(vs.get(cv2.CAP_PROP_FRAME_HEIGHT))
     width = int(vs.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -24,10 +24,6 @@ def calculate_social_distancing(vid_path, net, output_dir, ln1):
     
  
     scale_w, scale_h = utills.get_scale(width, height)
-
-    fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    #output_movie = cv2.VideoWriter("./output_vid/distancing.avi", fourcc, fps, (width, height))
-    #bird_movie = cv2.VideoWriter("./output_vid/bird_eye_view.avi", fourcc, fps, (int(width * scale_w), int(height * scale_h)))
         
     points = []
     global image
@@ -42,17 +38,8 @@ def calculate_social_distancing(vid_path, net, output_dir, ln1):
             
         (H, W) = frame.shape[:2]
         
-        # first frame will be used to draw ROI and horizontal and vertical 180 cm distance(unit length in both directions)
-        if count == 0:
-            while True:
-                image = frame
-                cv2.imshow("image", image)
-                cv2.waitKey(1)
-                if len(mouse_pts) == 8:
-                    cv2.destroyWindow("image")
-                    break
-               
-            points = mouse_pts      
+        
+        points = mouse_pts      
                  
        
         src = np.float32(np.array(points[:4]))
@@ -123,16 +110,15 @@ def calculate_social_distancing(vid_path, net, output_dir, ln1):
         
        
         img = plot.social_distancing_view(frame1, bxs_mat, boxes1, risk_count)
-        
-        # Show/write image and videos
+       
         if count != 0:
             #output_movie.write(img)
             
-            cv2.putText(img,"total Voilations : " + str(risk_count[0]), (30,30),cv2.FONT_HERSHEY_SIMPLEX,1,(255,0,0), 2,cv2.LINE_AA,False)
+            cv2.putText(img,"total Voilations : " + str(risk_count[0]), (30,30),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255), 2,cv2.LINE_AA,False)
             cv2.imshow('real_time',img)
-            #cv2.imwrite(output_dir+"frame%d.jpg" % count, img)
-            #cv2.imwrite(output_dir+"bird_eye_view/frame%d.jpg" % count, bird_image)
-    
+        cv2.namedWindow('real_time', cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty('real_time', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        #print(img.shape[:2])
         count = count + 1
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -148,35 +134,18 @@ if __name__== "__main__":
     
     parser.add_argument('-v', '--video_path', action='store', dest='video_path', default='./data/test.mp4' ,
                     help='Path for input video')
-                    
-    parser.add_argument('-o', '--output_dir', action='store', dest='output_dir', default='./output/' ,
-                    help='Path for Output images')
     
-    #parser.add_argument('-O', '--output_vid', action='store', dest='output_vid', default='./output_vid/' ,
-                    #help='Path for Output videos')
 
     parser.add_argument('-m', '--model', action='store', dest='model', default='./models/',
                     help='Path for models directory')
                     
-    parser.add_argument('-u', '--uop', action='store', dest='uop', default='NO',
-                    help='Use open pose or not (YES/NO)')
                     
     values = parser.parse_args()
     
     model_path = values.model
     if model_path[len(model_path) - 1] != '/':
         model_path = model_path + '/'
-        
-    output_dir = values.output_dir
-    if output_dir[len(output_dir) - 1] != '/':
-        output_dir = output_dir + '/'
-    
-    #output_vid = values.output_vid
-    #if output_vid[len(output_vid) - 1] != '/':
-     #   output_vid = output_vid + '/'
-
-
-   
+       
     
     weightsPath = model_path + "yolov4-tiny.weights"
     configPath = model_path + "yolov4-tiny.cfg"
@@ -186,7 +155,7 @@ if __name__== "__main__":
     ln1 = [ln[i[0] - 1] for i in net_yl.getUnconnectedOutLayers()]
 
    
-    calculate_social_distancing(values.video_path, net_yl, output_dir, ln1)
+    calculate_social_distancing(values.video_path, net_yl, ln1)
 
 
 
