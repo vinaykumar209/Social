@@ -8,7 +8,7 @@ import utills, plot
 
 confid = 0.5
 thresh = 0.5
-mouse_pts = [(0,0),(640,0),(640,480),(0,480),(0,0),(384,0),(0,288),(177,146)]
+mouse_pts = [(0,0),(640,0),(640,480),(0,480),(0,0),(384,0),(0,288)]
 
 
 
@@ -72,11 +72,10 @@ def calculate_social_distancing(vid_path, net, ln1):
                 scores = detection[5:]
                 classID = np.argmax(scores)
                 confidence = scores[classID]
-                
                 if classID == 0:
 
                     if confidence > confid:
-
+                        
                         box = detection[0:4] * np.array([W, H, W, H])
                         (centerX, centerY, width, height) = box.astype("int")
 
@@ -86,6 +85,7 @@ def calculate_social_distancing(vid_path, net, ln1):
                         boxes.append([x, y, int(width), int(height)])
                         confidences.append(float(confidence))
                         classIDs.append(classID)
+                        
                     
         idxs = cv2.dnn.NMSBoxes(boxes, confidences, confid, thresh)
         font = cv2.FONT_HERSHEY_PLAIN
@@ -115,6 +115,7 @@ def calculate_social_distancing(vid_path, net, ln1):
             #output_movie.write(img)
             
             cv2.putText(img,"total Voilations : " + str(risk_count[0]), (30,30),cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255), 2,cv2.LINE_AA,False)
+            cv2.putText(img,"Number of people : " + str(len(confidences)), (30,60),cv2.FONT_HERSHEY_SIMPLEX,1,(255,0,0), 2,cv2.LINE_AA,False)
             cv2.imshow('real_time',img)
         cv2.namedWindow('real_time', cv2.WINDOW_NORMAL)
         cv2.setWindowProperty('real_time', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
